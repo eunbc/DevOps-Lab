@@ -42,12 +42,12 @@ jobs:
         echo "TAG_NAME=v${DATE}" >> $GITHUB_ENV
 
     # 태그로 커밋하기
-    - name: Create Git Tag
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git tag ${{ env.TAG_NAME }}
-        git push origin ${{ env.TAG_NAME }}
+#    - name: Create Git Tag
+#      run: |
+#        git config --global user.name 'github-actions[bot]'
+#        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+#        git tag ${{ env.TAG_NAME }}
+#        git push origin ${{ env.TAG_NAME }}  // 403 ERROR!
 
     # Docker 로그인
     - name: Login to Docker Hub
