@@ -1,0 +1,48 @@
+name: Java CI with Gradle
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5
+
+      - name: Test with Gradle Wrapper
+        run: ./gradlew test --info
+
+      - name: Capture Test Results
+        run: |
+          TEST_RESULTS=$(cat ./build/reports/tests/test/index.html)
+          TEST_RESULTS="${TEST_RESULTS//$'\n'/ }"  # Remove newlines
+          echo "TEST_RESULTS=$(echo $TEST_RESULTS)" >> $GITHUB_ENV
+
+      - name: Comment PR with Test Results
+        uses: actions/github-script@v5
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const testResults = process.env.TEST_RESULTS;
+            const prNumber = context.payload.pull_request.number;
+            const message = `🚀 **Test Results:**\n\`\`\`html\n${testResults}\n\`\`\``;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: message
+            });
