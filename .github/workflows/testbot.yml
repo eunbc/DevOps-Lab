@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: write
       pull-requests: write
 
     steps:
@@ -25,24 +26,9 @@ jobs:
       - name: Test with Gradle Wrapper
         run: ./gradlew test --info
 
-      - name: Capture Test Results
-        run: |
-          TEST_RESULTS=$(cat ./build/reports/tests/test/index.html)
-          TEST_RESULTS="${TEST_RESULTS//$'\n'/ }"  # Remove newlines
-          echo "TEST_RESULTS=$(echo $TEST_RESULTS)" >> $GITHUB_ENV
-
-      - name: Comment PR with Test Results
-        uses: actions/github-script@v5
-        if: github.event_name == 'pull_request'
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const testResults = process.env.TEST_RESULTS;
-            const prNumber = context.payload.pull_request.number;
-            const message = `🚀 **Test Results:**\n\`\`\`html\n${testResults}\n\`\`\``;
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: message
-            });
+          files: |
+            test-results/**/*.xml
